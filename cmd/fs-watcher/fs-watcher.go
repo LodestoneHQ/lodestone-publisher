@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/analogj/lodestone-fs-watcher/pkg/version"
+	"github.com/fatih/color"
+	"log"
 	"os"
 	"time"
 
-	"github.com/analogj/lodestone-fs-watcher/pkg"
-	"github.com/urfave/cli"
-	"path/filepath"
-
 	"github.com/analogj/go-util/utils"
+	"github.com/analogj/lodestone-fs-watcher/pkg/watch"
+	"github.com/urfave/cli"
 )
 
 var goos string
@@ -52,14 +52,22 @@ func main() {
 				Name:  "start",
 				Usage: "Start the Lodestone filesystem watcher",
 				Action: func(c *cli.Context) error {
-
+					watch.Start(c.String("dest"))
 					return nil
 				},
 
-				Flags: []cli.Flag{},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "dir",
+						Usage: "The directory to watch for file changes.",
+					},
+				},
 			},
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(color.HiRedString("ERROR: %v", err))
+	}
 }

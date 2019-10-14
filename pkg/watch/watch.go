@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func StartWatching() {
+func Start(watchDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +33,7 @@ func StartWatching() {
 		}
 	}()
 
-	err = watcher.Add("/tmp/foo")
+	err = watcher.Add(watchDir)
 	if err != nil {
 		log.Fatal(err)
 	}
