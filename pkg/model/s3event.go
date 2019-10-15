@@ -70,10 +70,10 @@ type S3TestEvent struct {
 
 // Helper function written for Lodestone
 
-func (e *S3Event) Create(publisherName string, eventName string, sourceBucket string, sourceBucketKey string, sourceRawPath string) (S3Event, error) {
+func (e *S3Event) Create(publisherName string, eventName string, sourceBucket string, sourceBucketKey string, sourceRawPath string) error {
 	fileMetadata, err := os.Stat(sourceRawPath)
 	if err != nil {
-		return S3Event{}, err
+		return err
 	}
 
 	fileMD5, err := fileMD5Hash(sourceRawPath)
@@ -110,8 +110,8 @@ func (e *S3Event) Create(publisherName string, eventName string, sourceBucket st
 		},
 	}
 
-	eventList := S3Event{Records: []S3EventRecord{record}}
-	return eventList, nil
+	e.Records = []S3EventRecord{record}
+	return nil
 }
 
 func localIP() string {

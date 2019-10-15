@@ -41,33 +41,36 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					return
 				}
 				log.Println("event:", event)
+
+				s3EventName := ""
+
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					log.Println("modified file:", event.Name)
+					s3EventName = "s3:ObjectCreated:Put"
+				} else if event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite {
+					s3EventName = "s3:ObjectCreated:Put"
+				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+					s3EventName = "s3:ObjectRemoved:Delete"
+				}
 
-					var s3EventName string
+				if s3EventName == "" {
+					//ignore event
+					return
+				}
 
-					switch event.Op {
-					case fsnotify.CloseWrite:
-						s3EventName = "s3:ObjectCreated:Put"
-					case fsnotify.Remove:
-						s3EventName = "s3:ObjectRemoved:Delete"
-					}
+				s3EventPayload := model.S3Event{}
+				err := s3EventPayload.Create("fs", s3EventName, config["bucket"], url.PathEscape(event.Name), event.Name)
 
-					s3EventPayload := model.S3Event{}
-					event, err := s3EventPayload.Create("fs", s3EventName, config["bucket"], url.PathEscape(event.Name), event.Name)
-
-					if err == nil {
-						err := notifyClient.Publish(event)
-						if err != nil {
-							fmt.Print(err)
-						}
-
-					} else {
-						//log an error message if we cant create a valid S3EventPayload. Then ignore.
+				if err == nil {
+					err := notifyClient.Publish(s3EventPayload)
+					if err != nil {
 						fmt.Print(err)
 					}
 
+				} else {
+					//log an error message if we cant create a valid S3EventPayload. Then ignore.
+					fmt.Print(err)
 				}
+
 			//watch for errors
 			case err, ok := <-watcher.Errors:
 				if !ok {
