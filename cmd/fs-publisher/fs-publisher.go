@@ -30,7 +30,7 @@ func main() {
 		},
 		Before: func(c *cli.Context) error {
 
-			capsuleUrl := "https://github.com/AnalogJ/lodestone-fs-publisher"
+			capsuleUrl := "https://github.com/AnalogJ/lodestone-publisher"
 
 			versionInfo := fmt.Sprintf("%s.%s-%s", goos, goarch, version.VERSION)
 
