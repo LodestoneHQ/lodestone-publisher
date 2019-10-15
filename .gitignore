@@ -66,3 +66,5 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+lodestone-fs-publisher-linux-amd64
+vendor
