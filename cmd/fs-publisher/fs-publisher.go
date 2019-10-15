@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/analogj/go-util/utils"
-	"github.com/analogj/lodestone-fs-watcher/pkg/notify"
-	"github.com/analogj/lodestone-fs-watcher/pkg/version"
-	"github.com/analogj/lodestone-fs-watcher/pkg/watch"
+	"github.com/analogj/lodestone-publisher/pkg/notify"
+	"github.com/analogj/lodestone-publisher/pkg/version"
+	"github.com/analogj/lodestone-publisher/pkg/watch"
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
 	"log"

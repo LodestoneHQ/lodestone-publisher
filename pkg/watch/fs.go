@@ -3,8 +3,8 @@ package watch
 import (
 	"fmt"
 	"github.com/analogj/fsnotify"
-	"github.com/analogj/lodestone-fs-watcher/pkg/model"
-	"github.com/analogj/lodestone-fs-watcher/pkg/notify"
+	"github.com/analogj/lodestone-publisher/pkg/model"
+	"github.com/analogj/lodestone-publisher/pkg/notify"
 	"log"
 	"net/url"
 	"os"

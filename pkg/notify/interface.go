@@ -1,6 +1,6 @@
 package notify
 
-import "github.com/analogj/lodestone-fs-watcher/pkg/model"
+import "github.com/analogj/lodestone-publisher/pkg/model"
 
 type Interface interface {
 	Init(config map[string]string) error

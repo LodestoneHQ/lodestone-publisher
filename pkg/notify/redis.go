@@ -2,7 +2,7 @@ package notify
 
 import (
 	"fmt"
-	"github.com/analogj/lodestone-fs-watcher/pkg/model"
+	"github.com/analogj/lodestone-publisher/pkg/model"
 )
 import "github.com/go-redis/redis"
 
