@@ -56,7 +56,7 @@ func main() {
 					var notifyClient notify.Interface
 
 					notifyClient = new(notify.RedisNotify)
-					_ := notifyClient.Init(map[string]string{
+					notifyClient.Init(map[string]string{
 						"addr":     fmt.Sprintf("%s:%d", c.String("redis-hostname"), c.Int("redis-port")),
 						"password": c.String("redis-password"),
 						"queue":    c.String("redis-queue"),
