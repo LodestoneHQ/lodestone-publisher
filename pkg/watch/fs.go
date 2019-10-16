@@ -44,11 +44,11 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				s3EventName := ""
 
-				if event.Op&fsnotify.Create == fsnotify.Create {
+				if event.Op == fsnotify.Create {
 					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite {
+				} else if event.Op == fsnotify.CloseWrite {
 					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+				} else if event.Op == fsnotify.Remove {
 					s3EventName = "s3:ObjectRemoved:Delete"
 				}
 
