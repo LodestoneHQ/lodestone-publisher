@@ -44,7 +44,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				s3EventName := ""
 
-				if event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Op&fsnotify.Create == fsnotify.Create {
 					s3EventName = "s3:ObjectCreated:Put"
 				} else if event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite {
 					s3EventName = "s3:ObjectCreated:Put"
@@ -54,7 +54,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				if s3EventName == "" {
 					//ignore event
-					return
+					break
 				}
 
 				s3EventPayload := model.S3Event{}
