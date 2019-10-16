@@ -28,6 +28,6 @@ func (n *RedisNotify) Init(config map[string]string) error {
 func (n *RedisNotify) Publish(event model.S3Event) error {
 	fmt.Println("Publishing event..")
 
-	resp := n.client.HSet(n.queue, fmt.Sprintf("%s/%s", event.Records[0].S3.Bucket, event.Records[0].S3.Object), event)
+	resp := n.client.HSet(n.queue, fmt.Sprintf("%s/%s", event.Records[0].S3.Bucket.Name, event.Records[0].S3.Object.Key), event)
 	return resp.Err()
 }

@@ -72,12 +72,17 @@ type S3TestEvent struct {
 // Helper function written for Lodestone
 
 func (e *S3Event) Create(publisherName string, eventName string, sourceBucket string, sourceBucketKey string, sourceRawPath string) error {
-	fileMetadata, err := os.Stat(sourceRawPath)
-	if err != nil {
-		return err
-	}
 
-	fileMD5, err := fileMD5Hash(sourceRawPath)
+	fileSize := int64(0)
+	fileMD5 := ""
+	if eventName == "s3:ObjectCreated:Put" {
+		fileMetadata, err := os.Stat(sourceRawPath)
+		if err != nil {
+			return err
+		}
+		fileSize = fileMetadata.Size()
+		fileMD5, err = fileMD5Hash(sourceRawPath)
+	}
 
 	record := S3EventRecord{
 		EventVersion: "2.0",
@@ -104,7 +109,7 @@ func (e *S3Event) Create(publisherName string, eventName string, sourceBucket st
 			},
 			Object: S3Object{
 				Key:       sourceBucketKey,
-				Size:      fileMetadata.Size(),
+				Size:      fileSize,
 				ETag:      fileMD5,
 				VersionID: "1",
 			},

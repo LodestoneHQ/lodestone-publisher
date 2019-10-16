@@ -6,7 +6,6 @@ import (
 	"github.com/analogj/lodestone-publisher/pkg/model"
 	"github.com/analogj/lodestone-publisher/pkg/notify"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -41,38 +40,54 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					return
 				}
 				log.Println("event:", event)
-				log.Println(fmt.Sprintf("event Operation %d:", event.Op))
+
+				// PSEUDO CODE
+				// check if event is "add" or "delete"
+				// if event is "add" and is a file:
+				// 	 generate an event and publish
+				// if event is "add" and is a folder:
+				// 	 add watcher
+				// if event is "remove" and is a file or folder:
+				//   generate an event and publish
+				//   remove watcher (in-case this is a folder)
 
 				s3EventName := ""
-
-				if event.Op&fsnotify.Create == fsnotify.Create {
+				if (event.Op&fsnotify.Create == fsnotify.Create) || (event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite) {
 					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite {
-					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					s3EventName = "s3:ObjectRemoved:Delete"
-				}
 
-				log.Println(fmt.Sprintf("parsed s3EventName: %s", s3EventName))
-
-				if s3EventName == "" {
-					//ignore event
-					log.Println("Skipping event...")
-					break
-				}
-
-				s3EventPayload := model.S3Event{}
-				err := s3EventPayload.Create("fs", s3EventName, config["bucket"], url.PathEscape(event.Name), event.Name)
-
-				if err == nil {
-					err := notifyClient.Publish(s3EventPayload)
-					if err != nil {
-						fmt.Print(err)
+					//get event file/folder data.
+					eventPathInfo, err := os.Stat(event.Name)
+					if CheckErr(err) {
+						break
 					}
 
-				} else {
-					//log an error message if we cant create a valid S3EventPayload. Then ignore.
-					fmt.Printf("An error occured during publish: %s", err)
+					switch mode := eventPathInfo.Mode(); {
+					case mode.IsDir():
+						// newly added folder
+						err := fs.AddWatchDir(event.Name, eventPathInfo, nil)
+						CheckErr(err)
+
+					case mode.IsRegular():
+						// newly added file.
+						s3Event, err := GenerateS3Event(s3EventName, event, config)
+						CheckErr(err)
+						if err == nil {
+							err := notifyClient.Publish(s3Event)
+							CheckErr(err)
+						}
+					}
+
+				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+					s3EventName = "s3:ObjectRemoved:Delete"
+
+					s3Event, err := GenerateS3Event(s3EventName, event, config)
+					CheckErr(err)
+					if err == nil {
+						err := notifyClient.Publish(s3Event)
+						CheckErr(err)
+					}
+
+					fs.RemoveWatchDir(event.Name, nil, nil)
 				}
 
 			//watch for errors
@@ -98,4 +113,31 @@ func (fs *FsWatcher) AddWatchDir(path string, fi os.FileInfo, err error) error {
 	}
 
 	return nil
+}
+
+func (fs *FsWatcher) RemoveWatchDir(path string, fi os.FileInfo, err error) error {
+	return fs.watcher.Remove(path)
+}
+
+// Helpers
+
+func GenerateS3Event(s3EventName string, fsevent fsnotify.Event, config map[string]string) (model.S3Event, error) {
+
+	relPath, err := filepath.Rel(config["dir"], fsevent.Name)
+	if err != nil {
+		return model.S3Event{}, err
+	}
+
+	s3EventPayload := model.S3Event{}
+	err = s3EventPayload.Create("fs", s3EventName, config["bucket"], relPath, fsevent.Name)
+	return s3EventPayload, err
+}
+
+func CheckErr(err error) bool {
+	if err != nil {
+		log.Println("error:", err)
+		return true
+	} else {
+		return false
+	}
 }
