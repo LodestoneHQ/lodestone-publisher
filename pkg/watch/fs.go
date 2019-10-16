@@ -41,19 +41,23 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					return
 				}
 				log.Println("event:", event)
+				log.Println(fmt.Sprintf("event Operation %d:", event.Op))
 
 				s3EventName := ""
 
-				if event.Op == fsnotify.Create {
+				if event.Op&fsnotify.Create == fsnotify.Create {
 					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op == fsnotify.CloseWrite {
+				} else if event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite {
 					s3EventName = "s3:ObjectCreated:Put"
-				} else if event.Op == fsnotify.Remove {
+				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
 					s3EventName = "s3:ObjectRemoved:Delete"
 				}
 
+				log.Println(fmt.Sprintf("parsed s3EventName: %s", s3EventName))
+
 				if s3EventName == "" {
 					//ignore event
+					log.Println("Skipping event...")
 					break
 				}
 
@@ -68,7 +72,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				} else {
 					//log an error message if we cant create a valid S3EventPayload. Then ignore.
-					fmt.Print(err)
+					fmt.Printf("An error occured during publish: %s", err)
 				}
 
 			//watch for errors

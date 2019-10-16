@@ -6,6 +6,7 @@ package model
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -112,6 +113,15 @@ func (e *S3Event) Create(publisherName string, eventName string, sourceBucket st
 
 	e.Records = []S3EventRecord{record}
 	return nil
+}
+
+func (e S3Event) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(e)
+}
+
+func (e S3Event) UnmarshalBinary(data []byte) error {
+	// convert data to yours, let's assume its json data
+	return json.Unmarshal(data, e)
 }
 
 func localIP() string {

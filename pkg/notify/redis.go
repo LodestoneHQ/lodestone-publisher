@@ -26,8 +26,18 @@ func (n *RedisNotify) Init(config map[string]string) error {
 }
 
 func (n *RedisNotify) Publish(event model.S3Event) error {
+	fmt.Println("Publishing event..")
 
-	n.client.RPush(n.queue, event)
+	//b, err := json.Marshal(event)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return err
+	//}
+	//
+	//var inInterface map[string]interface{}
+	//json.Unmarshal(b, &inInterface)
+
+	fmt.Print(n.client.HSet(n.queue, "testfieldname", event))
 	return nil
 	//
 	////n.client.RPush()
