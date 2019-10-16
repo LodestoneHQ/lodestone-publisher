@@ -26,31 +26,8 @@ func (n *RedisNotify) Init(config map[string]string) error {
 }
 
 func (n *RedisNotify) Publish(event model.S3Event) error {
+	fmt.Println("Publishing event..")
 
-	n.client.RPush(n.queue, event)
-	return nil
-	//
-	////n.client.RPush()
-	//err := n.client.Set("key", "value", 0).Err()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//val, err := n.client.Get("key").Result()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println("key", val)
-	//
-	//val2, err := n.client.Get("key2").Result()
-	//if err == redis.Nil {
-	//	fmt.Println("key2 does not exist")
-	//} else if err != nil {
-	//	panic(err)
-	//} else {
-	//	fmt.Println("key2", val2)
-	//}
-	//// Output: key value
-	//// key2 does not exist
-	//return nil
+	resp := n.client.HSet(n.queue, fmt.Sprintf("%s/%s", event.Records[0].S3.Bucket.Name, event.Records[0].S3.Object.Key), event)
+	return resp.Err()
 }
