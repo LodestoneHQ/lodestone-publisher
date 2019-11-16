@@ -56,11 +56,15 @@ func main() {
 					var notifyClient notify.Interface
 
 					notifyClient = new(notify.AmqpNotify)
-					notifyClient.Init(map[string]string{
+					err := notifyClient.Init(map[string]string{
 						"amqp-url": c.String("amqp-url"),
 						"exchange": c.String("amqp-exchange"),
 						"queue":    c.String("amqp-queue"),
 					})
+					if err != nil {
+						return err
+					}
+					defer notifyClient.Close()
 
 					watcher := watch.FsWatcher{}
 					watcher.Start(notifyClient, map[string]string{
