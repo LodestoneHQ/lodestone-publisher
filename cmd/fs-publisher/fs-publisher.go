@@ -30,7 +30,7 @@ func main() {
 		},
 		Before: func(c *cli.Context) error {
 
-			capsuleUrl := "https://github.com/AnalogJ/lodestone-publisher"
+			capsuleUrl := "AnalogJ/lodestone-publisher"
 
 			versionInfo := fmt.Sprintf("%s.%s-%s", goos, goarch, version.VERSION)
 
@@ -55,11 +55,11 @@ func main() {
 
 					var notifyClient notify.Interface
 
-					notifyClient = new(notify.RedisNotify)
+					notifyClient = new(notify.AmqpNotify)
 					notifyClient.Init(map[string]string{
-						"addr":     fmt.Sprintf("%s:%d", c.String("redis-hostname"), c.Int("redis-port")),
-						"password": c.String("redis-password"),
-						"queue":    c.String("redis-queue"),
+						"amqp-url": c.String("amqp-url"),
+						"exchange": c.String("amqp-exchange"),
+						"queue":    c.String("amqp-queue"),
 					})
 
 					watcher := watch.FsWatcher{}
@@ -81,24 +81,21 @@ func main() {
 					},
 
 					&cli.StringFlag{
-						Name:  "redis-hostname",
-						Usage: "The redis server hostname",
-						Value: "localhost",
+						Name:  "amqp-url",
+						Usage: "The amqp connection string",
+						Value: "amqp://guest:guest@localhost:5672",
 					},
-					&cli.IntFlag{
-						Name:  "redis-port",
-						Usage: "The redis server port",
-						Value: 6379,
-					},
+
 					&cli.StringFlag{
-						Name:  "redis-password",
-						Usage: "The redis server password",
-						Value: "",
+						Name:  "amqp-exchange",
+						Usage: "The amqp exchange",
+						Value: "storageevents",
 					},
+
 					&cli.StringFlag{
-						Name:  "redis-queue",
-						Usage: "The redis server queue",
-						Value: "documentsevents",
+						Name:  "amqp-queue",
+						Usage: "The amqp queue",
+						Value: "storagelogs",
 					},
 				},
 			},

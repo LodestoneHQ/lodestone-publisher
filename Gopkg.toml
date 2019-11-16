@@ -41,3 +41,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/analogj/go-util"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/streadway/amqp"
