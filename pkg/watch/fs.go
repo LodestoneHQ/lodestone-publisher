@@ -88,6 +88,8 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					}
 
 					fs.RemoveWatchDir(event.Name, nil, nil)
+				} else {
+					log.Println("Ignoring event: ", event)
 				}
 
 			//watch for errors
