@@ -93,7 +93,7 @@ func main() {
 					&cli.StringFlag{
 						Name:  "amqp-exchange",
 						Usage: "The amqp exchange",
-						Value: "storageevents",
+						Value: "lodestone",
 					},
 
 					&cli.StringFlag{
