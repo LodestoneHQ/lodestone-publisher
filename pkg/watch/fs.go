@@ -28,6 +28,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 		fmt.Println("ERROR", err)
 	}
 
+	fmt.Println("Start watching for filesystem events")
 	done := make(chan bool)
 
 	go func() {
