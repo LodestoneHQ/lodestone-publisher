@@ -38,6 +38,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 			//watch for events
 			case event, ok := <-watcher.Events:
 				if !ok {
+					log.Println("FAILED event:", event)
 					return
 				}
 				log.Println("event:", event)
@@ -54,6 +55,8 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				s3EventName := ""
 				if (event.Op&fsnotify.Create == fsnotify.Create) || (event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite) {
+					log.Println("Processing create event: ", event)
+
 					s3EventName = "s3:ObjectCreated:Put"
 
 					//get event file/folder data.
@@ -79,6 +82,8 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					}
 
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+					log.Println("Processing delete event: ", event)
+
 					s3EventName = "s3:ObjectRemoved:Delete"
 
 					s3Event, err := GenerateS3Event(s3EventName, event, config)
@@ -96,6 +101,7 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 			//watch for errors
 			case err, ok := <-watcher.Errors:
 				if !ok {
+					log.Println("failed error", err)
 					return
 				}
 				log.Println("error:", err)
@@ -112,6 +118,7 @@ func (fs *FsWatcher) AddWatchDir(path string, fi os.FileInfo, err error) error {
 	// since fsnotify can watch all the files in a directory, watchers only need
 	// to be added to each nested directory
 	if fi.Mode().IsDir() {
+		log.Printf("Watching new directory: %v", path)
 		return fs.watcher.Add(path)
 	}
 
@@ -119,6 +126,7 @@ func (fs *FsWatcher) AddWatchDir(path string, fi os.FileInfo, err error) error {
 }
 
 func (fs *FsWatcher) RemoveWatchDir(path string, fi os.FileInfo, err error) error {
+	log.Printf("Removing watch directory: %v", path)
 	return fs.watcher.Remove(path)
 }
 
