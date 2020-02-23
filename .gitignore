@@ -67,4 +67,6 @@ fabric.properties
 .idea/httpRequests
 
 lodestone-fs-publisher-linux-amd64
+lodestone-email-publisher-linux-amd64
 vendor
+emailimap.go

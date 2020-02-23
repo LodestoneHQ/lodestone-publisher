@@ -18,6 +18,28 @@
   revision = "5295e364eb144aa8e5af346f41d5d0fc1bdecbf5"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ca4200f8a382fe3d2f585e3f007ab6d43273ce5c6e0126e2c0bb104aae74858e"
+  name = "github.com/emersion/go-imap"
+  packages = [
+    ".",
+    "client",
+    "commands",
+    "responses",
+    "utf7",
+  ]
+  pruneopts = "UT"
+  revision = "5162c2f0c9e10e720649a7e8bb8efe0b7a7801a3"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1075cf50f448ef68e39ccd1ff0156b1b5ff1fdbf41a41971a04f5d02b464ed3b"
+  name = "github.com/emersion/go-sasl"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "430746ea8b9b0d38b92f8a9bc0539ffe6e8a355f"
+
+[[projects]]
   digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
   name = "github.com/fatih/color"
   packages = ["."]
@@ -92,12 +114,28 @@
   pruneopts = "UT"
   revision = "b09406accb4736d857a32bf9444cd7edae2ffa79"
 
+[[projects]]
+  digest = "1:cc38c2209a6c1f94debdfd96934865a258eac2f905a8d3f8fd56e7d0cfb85edd"
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/internal/identifier",
+    "internal/gen",
+    "transform",
+    "unicode/cldr",
+  ]
+  pruneopts = "UT"
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/analogj/fsnotify",
     "github.com/analogj/go-util/utils",
+    "github.com/emersion/go-imap",
+    "github.com/emersion/go-imap/client",
     "github.com/fatih/color",
     "github.com/streadway/amqp",
     "github.com/urfave/cli",
