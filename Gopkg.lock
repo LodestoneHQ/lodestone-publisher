@@ -33,11 +33,31 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:84dad76b1794033132856932bdfddac7c395c58534d78d434083505800bbe7d2"
+  name = "github.com/emersion/go-message"
+  packages = [
+    ".",
+    "mail",
+    "textproto",
+  ]
+  pruneopts = "UT"
+  revision = "9c4415ed8676c8c7a266e0c1713ffb104f51637d"
+
+[[projects]]
+  branch = "master"
   digest = "1:1075cf50f448ef68e39ccd1ff0156b1b5ff1fdbf41a41971a04f5d02b464ed3b"
   name = "github.com/emersion/go-sasl"
   packages = ["."]
   pruneopts = "UT"
   revision = "430746ea8b9b0d38b92f8a9bc0539ffe6e8a355f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:47fffd6812689e229e8072737578af99cad0b17707cc07c36344c63bb6b797f1"
+  name = "github.com/emersion/go-textwrapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d0e65e56babe3f687ff94c1d764ca0e6aa7723ee"
 
 [[projects]]
   digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
@@ -54,6 +74,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "a635b98146f0f465f3413a0b8ec481f3698d3fc2"
+
+[[projects]]
+  digest = "1:46a3bc40e9de7fc623b5bc904abbb36ca8718fc5f644786458c46fd43f6a8e25"
+  name = "github.com/martinlindhe/base36"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7c6542dfbb41505111dde1f321eb5d5002f5fb88"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -136,6 +164,7 @@
     "github.com/analogj/go-util/utils",
     "github.com/emersion/go-imap",
     "github.com/emersion/go-imap/client",
+    "github.com/emersion/go-message/mail",
     "github.com/fatih/color",
     "github.com/streadway/amqp",
     "github.com/urfave/cli",
