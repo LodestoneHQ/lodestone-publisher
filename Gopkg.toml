@@ -45,3 +45,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/streadway/amqp"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/emersion/go-imap"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/emersion/go-message"
