@@ -186,7 +186,7 @@ func (ew *EmailWatcher) saveAttachment(attachmentFilename string, attachmentData
 
 	fileName := filepath.Base(attachmentFilename)
 	localFilepath := filepath.Join(localTempDir, fileName)
-	log.Println("Store attachment locally: %v, %v", attachmentFilename, localFilepath)
+	log.Printf("Store attachment locally: %v, %v", attachmentFilename, localFilepath)
 
 	localFile, err := os.Create(localFilepath)
 	if err != nil {
