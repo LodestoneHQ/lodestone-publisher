@@ -2,7 +2,8 @@
 engine_enable_code_mutation: true
 
 engine_cmd_compile:
-  - 'GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-X main.goos=linux -X main.goarch=amd64 -extldflags \"-static\"" -o lodestone-fs-publisher-linux-amd64 $(go list ./cmd/...)'
+  - 'GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-X main.goos=linux -X main.goarch=amd64 -extldflags \"-static\"" -o lodestone-fs-publisher-linux-amd64 $(go list ./cmd/fs-publisher/...)'
+  - 'GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-X main.goos=linux -X main.goarch=amd64 -extldflags \"-static\"" -o lodestone-email-publisher-linux-amd64 $(go list ./cmd/email-publisher...)'
 engine_cmd_test: 'go test -v ./...'
 engine_disable_lint: true
 
@@ -12,3 +13,5 @@ scm_enable_branch_cleanup: true
 scm_release_assets:
   - local_path: lodestone-fs-publisher-linux-amd64
     artifact_name: lodestone-fs-publisher-linux-amd64
+  - local_path: lodestone-email-publisher-linux-amd64
+    artifact_name: lodestone-email-publisher-linux-amd64
