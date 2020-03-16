@@ -85,7 +85,7 @@ func (ew *EmailWatcher) batchProcessMessages(c *client.Client) {
 		//todo publish/generate events for stored documents
 		ew.generateEvent()
 
-		//todo, delete messages
+		//delete messages
 		ew.deleteMessages(c, seqset)
 	}
 
