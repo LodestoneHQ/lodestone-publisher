@@ -68,6 +68,14 @@
   version = "v1.7.0"
 
 [[projects]]
+  digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   branch = "master"
   digest = "1:7d7858db1f9b43b69c2905bae2b5c8b8395f6d2093dbf147ffaeb424c34c4e81"
   name = "github.com/kvz/logstreamer"
@@ -106,6 +114,14 @@
   pruneopts = "UT"
   revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
   version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d9191c35dc4c1a7f438d8a3b5397b0ec538836c9d44e1f0c17ca8fb01a66c3b6"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7ea96a3284ed9d25de5056804d60426cb75833c7"
 
 [[projects]]
   branch = "master"
@@ -166,6 +182,7 @@
     "github.com/emersion/go-imap/client",
     "github.com/emersion/go-message/mail",
     "github.com/fatih/color",
+    "github.com/sirupsen/logrus",
     "github.com/streadway/amqp",
     "github.com/urfave/cli",
   ]

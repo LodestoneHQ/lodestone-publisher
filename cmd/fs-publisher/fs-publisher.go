@@ -7,6 +7,7 @@ import (
 	"github.com/analogj/lodestone-publisher/pkg/version"
 	"github.com/analogj/lodestone-publisher/pkg/watch"
 	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"log"
 	"os"
@@ -52,11 +53,20 @@ func main() {
 				Name:  "start",
 				Usage: "Start the Lodestone filesystem watcher",
 				Action: func(c *cli.Context) error {
+					publisherLogger := logrus.WithFields(logrus.Fields{
+						"type": "fs",
+					})
+
+					if c.Bool("debug") {
+						logrus.SetLevel(logrus.DebugLevel)
+					} else {
+						logrus.SetLevel(logrus.InfoLevel)
+					}
 
 					var notifyClient notify.Interface
 
 					notifyClient = new(notify.AmqpNotify)
-					err := notifyClient.Init(map[string]string{
+					err := notifyClient.Init(publisherLogger, map[string]string{
 						"amqp-url": c.String("amqp-url"),
 						"exchange": c.String("amqp-exchange"),
 						"queue":    c.String("amqp-queue"),
@@ -67,7 +77,7 @@ func main() {
 					defer notifyClient.Close()
 
 					watcher := watch.FsWatcher{}
-					watcher.Start(notifyClient, map[string]string{
+					watcher.Start(publisherLogger, notifyClient, map[string]string{
 						"dir":    c.String("dir"),
 						"bucket": c.String("bucket"),
 					})
@@ -100,6 +110,10 @@ func main() {
 						Name:  "amqp-queue",
 						Usage: "The amqp queue",
 						Value: "storagelogs",
+					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "Enable debug logging",
 					},
 				},
 			},

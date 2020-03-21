@@ -53,3 +53,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/emersion/go-message"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/sirupsen/logrus"

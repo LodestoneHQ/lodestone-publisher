@@ -1,9 +1,12 @@
 package notify
 
-import "github.com/analogj/lodestone-publisher/pkg/model"
+import (
+	"github.com/analogj/lodestone-publisher/pkg/model"
+	"github.com/sirupsen/logrus"
+)
 
 type Interface interface {
-	Init(config map[string]string) error
+	Init(logger *logrus.Entry, config map[string]string) error
 	Publish(event model.S3Event) error
 	Close() error
 }
