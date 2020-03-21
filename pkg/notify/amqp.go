@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/analogj/lodestone-publisher/pkg/model"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
-	"log"
-	"os"
 	"time"
 )
 
 //Based on https://github.com/streadway/amqp/blob/master/example_client_test.go
 
 type AmqpNotify struct {
-	logger   *log.Logger
+	logger   *logrus.Entry
 	client   *amqp.Connection
 	channel  *amqp.Channel
 	exchange string
@@ -43,10 +42,10 @@ var (
 	errShutdown      = errors.New("session is shutting down")
 )
 
-func (n *AmqpNotify) Init(config map[string]string) error {
+func (n *AmqpNotify) Init(logger *logrus.Entry, config map[string]string) error {
 	n.exchange = config["exchange"]
 	n.queue = config["queue"]
-	n.logger = log.New(os.Stdout, "", log.LstdFlags)
+	n.logger = logger
 
 	go n.handleReconnect(config["amqp-url"])
 	return nil
@@ -57,12 +56,12 @@ func (n *AmqpNotify) Init(config map[string]string) error {
 func (n *AmqpNotify) handleReconnect(addr string) {
 	for {
 		n.isReady = false
-		log.Println("Attempting to connect")
+		n.logger.Infoln("Attempting to connect")
 
 		conn, err := n.connect(addr)
 
 		if err != nil {
-			log.Println("Failed to connect. Retrying...")
+			n.logger.Errorln("Failed to connect. Retrying...")
 
 			select {
 			case <-n.done:
@@ -87,7 +86,7 @@ func (n *AmqpNotify) connect(addr string) (*amqp.Connection, error) {
 	}
 
 	n.changeClient(conn)
-	log.Println("Connected!")
+	n.logger.Infoln("Connected!")
 	return conn, nil
 }
 
@@ -100,7 +99,7 @@ func (n *AmqpNotify) handleReInit(conn *amqp.Connection) bool {
 		err := n.init(conn)
 
 		if err != nil {
-			log.Println("Failed to initialize channel. Retrying...")
+			n.logger.Warnln("Failed to initialize channel. Retrying...")
 
 			select {
 			case <-n.done:
@@ -114,10 +113,10 @@ func (n *AmqpNotify) handleReInit(conn *amqp.Connection) bool {
 		case <-n.done:
 			return true
 		case <-n.notifyConnClose:
-			log.Println("Connection closed. Reconnecting...")
+			n.logger.Warnln("Connection closed. Reconnecting...")
 			return false
 		case <-n.notifyChanClose:
-			log.Println("Channel closed. Re-running init...")
+			n.logger.Warnln("Channel closed. Re-running init...")
 		}
 	}
 }
@@ -163,7 +162,7 @@ func (n *AmqpNotify) init(conn *amqp.Connection) error {
 
 	n.changeChannel(ch)
 	n.isReady = true
-	log.Println("Setup!")
+	n.logger.Debugln("Setup!")
 
 	return nil
 }

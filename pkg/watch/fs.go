@@ -5,19 +5,21 @@ import (
 	"github.com/analogj/fsnotify"
 	"github.com/analogj/lodestone-publisher/pkg/model"
 	"github.com/analogj/lodestone-publisher/pkg/notify"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 )
 
 type FsWatcher struct {
+	logger  *logrus.Entry
 	watcher *fsnotify.Watcher
 }
 
-func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]string) {
+func (fs *FsWatcher) Start(logger *logrus.Entry, notifyClient notify.Interface, config map[string]string) {
+	fs.logger = logger
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		fs.logger.Fatal(err)
 	}
 	fs.watcher = watcher
 	defer fs.watcher.Close()
@@ -38,10 +40,10 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 			//watch for events
 			case event, ok := <-watcher.Events:
 				if !ok {
-					log.Println("FAILED event:", event)
+					fs.logger.Warnln("FAILED event:", event)
 					return
 				}
-				log.Println("event:", event)
+				fs.logger.Debugln("event:", event)
 
 				// PSEUDO CODE
 				// check if event is "add" or "delete"
@@ -55,13 +57,13 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 
 				s3EventName := ""
 				if (event.Op&fsnotify.Create == fsnotify.Create) || (event.Op&fsnotify.CloseWrite == fsnotify.CloseWrite) {
-					log.Println("Processing create event: ", event)
+					fs.logger.Infoln("Processing create event: ", event)
 
 					s3EventName = "s3:ObjectCreated:Put"
 
 					//get event file/folder data.
 					eventPathInfo, err := os.Stat(event.Name)
-					if CheckErr(err) {
+					if fs.CheckErr(err) {
 						break
 					}
 
@@ -69,42 +71,42 @@ func (fs *FsWatcher) Start(notifyClient notify.Interface, config map[string]stri
 					case mode.IsDir():
 						// newly added folder
 						err := fs.AddWatchDir(event.Name, eventPathInfo, nil)
-						CheckErr(err)
+						fs.CheckErr(err)
 
 					case mode.IsRegular():
 						// newly added file.
 						s3Event, err := GenerateS3Event(s3EventName, event, config)
-						CheckErr(err)
+						fs.CheckErr(err)
 						if err == nil {
 							err := notifyClient.Publish(s3Event)
-							CheckErr(err)
+							fs.CheckErr(err)
 						}
 					}
 
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					log.Println("Processing delete event: ", event)
+					fs.logger.Infoln("Processing delete event: ", event)
 
 					s3EventName = "s3:ObjectRemoved:Delete"
 
 					s3Event, err := GenerateS3Event(s3EventName, event, config)
-					CheckErr(err)
+					fs.CheckErr(err)
 					if err == nil {
 						err := notifyClient.Publish(s3Event)
-						CheckErr(err)
+						fs.CheckErr(err)
 					}
 
 					fs.RemoveWatchDir(event.Name, nil, nil)
 				} else {
-					log.Println("Ignoring event: ", event)
+					fs.logger.Infoln("Ignoring event: ", event)
 				}
 
 			//watch for errors
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					log.Println("failed error", err)
+					fs.logger.Errorln("failed error", err)
 					return
 				}
-				log.Println("error:", err)
+				fs.logger.Errorln("error:", err)
 			}
 		}
 	}()
@@ -118,7 +120,7 @@ func (fs *FsWatcher) AddWatchDir(path string, fi os.FileInfo, err error) error {
 	// since fsnotify can watch all the files in a directory, watchers only need
 	// to be added to each nested directory
 	if fi.Mode().IsDir() {
-		log.Printf("Watching new directory: %v", path)
+		fs.logger.Infof("Watching new directory: %v", path)
 		return fs.watcher.Add(path)
 	}
 
@@ -126,7 +128,7 @@ func (fs *FsWatcher) AddWatchDir(path string, fi os.FileInfo, err error) error {
 }
 
 func (fs *FsWatcher) RemoveWatchDir(path string, fi os.FileInfo, err error) error {
-	log.Printf("Removing watch directory: %v", path)
+	fs.logger.Infof("Removing watch directory: %v", path)
 	return fs.watcher.Remove(path)
 }
 
@@ -144,9 +146,9 @@ func GenerateS3Event(s3EventName string, fsevent fsnotify.Event, config map[stri
 	return s3EventPayload, err
 }
 
-func CheckErr(err error) bool {
+func (fs *FsWatcher) CheckErr(err error) bool {
 	if err != nil {
-		log.Println("error:", err)
+		fs.logger.Errorln("error:", err)
 		return true
 	} else {
 		return false

@@ -7,9 +7,9 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,13 +19,14 @@ import (
 )
 
 type EmailWatcher struct {
+	logger       *logrus.Entry
 	apiEndpoint  string
 	bucket       string
 	imapInterval int
 }
 
-func (ew *EmailWatcher) Start(notifyClient notify.Interface, config map[string]string) {
-
+func (ew *EmailWatcher) Start(logger *logrus.Entry, notifyClient notify.Interface, config map[string]string) {
+	ew.logger = logger
 	ew.apiEndpoint = config["api-endpoint"]
 	ew.bucket = config["bucket"]
 	interval, err := strconv.Atoi(config["imap-interval"])
@@ -36,29 +37,30 @@ func (ew *EmailWatcher) Start(notifyClient notify.Interface, config map[string]s
 		ew.imapInterval = interval
 	}
 
-	log.Println("Connecting to server...")
+	ew.logger.Infoln("Connecting to server...")
 
 	// Connect to server
 	c, err := client.DialTLS(fmt.Sprintf("%s:%s", config["imap-hostname"], config["imap-port"]), &tls.Config{ServerName: config["imap-hostname"]})
 	if err != nil {
-		log.Fatal(err)
+		ew.logger.Fatal(err)
 	}
-	log.Println("Connected")
+	ew.logger.Infoln("Connected")
 
 	// Don't forget to logout
 	defer c.Logout()
 
 	// Login
 	if err := c.Login(config["imap-username"], config["imap-password"]); err != nil {
-		log.Fatal(err)
+		ew.logger.Fatal(err)
 	}
-	log.Println("Logged in")
+	ew.logger.Println("Logged in")
 
 	for {
 		//loop forever.
 		// process messages, wait for x seconds (imap-interval), then start processing again.
 		ew.batchProcessMessages(c)
 
+		ew.logger.Printf("Sleeping for %d seconds...", ew.imapInterval)
 		time.Sleep(time.Duration(ew.imapInterval) * time.Second)
 
 	}
@@ -78,12 +80,12 @@ func (ew *EmailWatcher) batchProcessMessages(c *client.Client) {
 		// get lastest mailbox information
 		mbox, err := c.Select("INBOX", false)
 		if err != nil {
-			log.Fatal(err)
+			ew.logger.Fatal(err)
 		}
 		// Get all messages
 		if mbox.Messages == 0 {
 			//if theres no messages to process, break out of the loop and wait for next imap interval
-			log.Printf("No messages to process")
+			ew.logger.Printf("No messages to process")
 			break
 		}
 
@@ -96,7 +98,7 @@ func (ew *EmailWatcher) batchProcessMessages(c *client.Client) {
 		seqset := new(imap.SeqSet)
 		seqset.AddRange(from, to)
 
-		log.Printf("Retrieving messages")
+		ew.logger.Printf("Retrieving messages")
 		ew.retrieveMessages(c, seqset)
 
 		//todo publish/generate events for stored documents
@@ -120,7 +122,7 @@ func (ew *EmailWatcher) retrieveMessages(c *client.Client, seqset *imap.SeqSet) 
 	}()
 
 	for msg := range messages {
-		log.Println("UID: ", msg.Uid)
+		ew.logger.Debugln("UID: ", msg.Uid)
 		/* read and process the email */
 
 		ew.storeAttachments(c, section, msg)
@@ -128,37 +130,37 @@ func (ew *EmailWatcher) retrieveMessages(c *client.Client, seqset *imap.SeqSet) 
 	}
 
 	if err := <-done; err != nil {
-		log.Fatal(err)
+		ew.logger.Fatal(err)
 	}
 }
 
 func (ew *EmailWatcher) storeAttachments(c *client.Client, section *imap.BodySectionName, msg *imap.Message) ([]string, error) {
 	r := msg.GetBody(section)
 	if r == nil {
-		log.Print("Error: Message body empty.")
+		ew.logger.Warnln("Error: Message body empty.")
 		return nil, nil
 	}
 
 	// Create a new mail reader
 	mr, err := mail.CreateReader(r)
 	if err != nil {
-		log.Printf("Error creating mail readerr: %v", err)
+		ew.logger.Errorf("Error creating mail readerr: %v", err)
 		return nil, err
 	}
 
 	// Print some info about the message
 	header := mr.Header
 	if date, err := header.Date(); err == nil {
-		log.Println("Date:", date)
+		ew.logger.Debugln("Date:", date)
 	}
 	if from, err := header.AddressList("From"); err == nil {
-		log.Println("From:", from)
+		ew.logger.Debugln("From:", from)
 	}
 	if to, err := header.AddressList("To"); err == nil {
-		log.Println("To:", to)
+		ew.logger.Debugln("To:", to)
 	}
 	if subject, err := header.Subject(); err == nil {
-		log.Println("Subject:", subject)
+		ew.logger.Debugln("Subject:", subject)
 	}
 
 	//TODO: filter message based on sender, attachment type
@@ -176,7 +178,7 @@ func (ew *EmailWatcher) storeAttachments(c *client.Client, section *imap.BodySec
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatal(err)
+			ew.logger.Fatal(err)
 		}
 		switch h := p.Header.(type) {
 		case *mail.AttachmentHeader:
@@ -203,7 +205,7 @@ func (ew *EmailWatcher) saveAttachment(attachmentFilename string, attachmentData
 
 	fileName := filepath.Base(attachmentFilename)
 	localFilepath := filepath.Join(localTempDir, fileName)
-	log.Printf("Store attachment locally: %v, %v", attachmentFilename, localFilepath)
+	ew.logger.Infof("Store attachment locally: %v, %v", attachmentFilename, localFilepath)
 
 	localFile, err := os.Create(localFilepath)
 	if err != nil {
@@ -252,11 +254,11 @@ func (ew *EmailWatcher) deleteMessages(c *client.Client, seqset *imap.SeqSet) {
 	item := imap.FormatFlagsOp(imap.AddFlags, true)
 	flags := []interface{}{imap.DeletedFlag}
 	if err := c.Store(seqset, item, flags, nil); err != nil {
-		log.Fatal(err)
+		ew.logger.Fatal(err)
 	}
 
 	// Then delete it
 	if err := c.Expunge(nil); err != nil {
-		log.Fatal(err)
+		ew.logger.Fatal(err)
 	}
 }
