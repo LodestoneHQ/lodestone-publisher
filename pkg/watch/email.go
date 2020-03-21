@@ -14,17 +14,27 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 )
 
 type EmailWatcher struct {
-	apiEndpoint string
-	bucket      string
+	apiEndpoint  string
+	bucket       string
+	imapInterval int
 }
 
 func (ew *EmailWatcher) Start(notifyClient notify.Interface, config map[string]string) {
 
 	ew.apiEndpoint = config["api-endpoint"]
 	ew.bucket = config["bucket"]
+	interval, err := strconv.Atoi(config["imap-interval"])
+	if err != nil {
+		//use a sane default for interval
+		ew.imapInterval = 600
+	} else {
+		ew.imapInterval = interval
+	}
 
 	log.Println("Connecting to server...")
 
@@ -44,7 +54,14 @@ func (ew *EmailWatcher) Start(notifyClient notify.Interface, config map[string]s
 	}
 	log.Println("Logged in")
 
-	ew.batchProcessMessages(c)
+	for {
+		//loop forever.
+		// process messages, wait for x seconds (imap-interval), then start processing again.
+		ew.batchProcessMessages(c)
+
+		time.Sleep(time.Duration(ew.imapInterval) * time.Second)
+
+	}
 
 }
 
@@ -52,7 +69,7 @@ func (ew *EmailWatcher) batchProcessMessages(c *client.Client) {
 	//retrieve messages from mailbox
 	//note: the number of messages may be absurdly large, so lets do this in batches for safety (sets of 100 messages)
 
-	//for each "page", lets generate the range of messages to retrieve
+	//retrieve 100 messages at a time, after processing we will delete them
 
 	// message ranges are 1 base indexed.
 	// ie, batches include messages from 1-100
